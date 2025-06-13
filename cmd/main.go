@@ -7,33 +7,22 @@ import (
 	"os"
 
 	"context"
-	"database/sql"
 	_ "github.com/lib/pq"
 	"github.com/redis/go-redis/v9"
+	"messaging/internal/db"
 )
 
 func main() {
 	ctx := context.Background()
 
-	//pgsql
-	pgURL := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		os.Getenv("POSTGRES_HOST"),
-		os.Getenv("POSTGRES_PORT"),
-		os.Getenv("POSTGRES_USER"),
-		os.Getenv("POSTGRES_PASSWORD"),
-		os.Getenv("POSTGRES_DB"))
+	conn, err := db.NewConnection()
 
-	db, err := sql.Open("postgres", pgURL)
 	if err != nil {
 		log.Fatalf("failed to connect to postgres: %v", err)
 	}
 
-	err = db.Ping()
-	if err != nil {
-		log.Fatalf("failed to ping postgres: %v", err)
-	}
-
 	log.Println("connected to postgres successfully")
+	defer conn.Close()
 
 	//redis
 
