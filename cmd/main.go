@@ -3,6 +3,9 @@ package main
 import (
 	"fmt"
 	"log"
+	handler "messaging/internal/handler/message"
+	"messaging/internal/repository/message"
+	"messaging/internal/router"
 	"net/http"
 	"os"
 
@@ -24,6 +27,10 @@ func main() {
 	log.Println("connected to postgres successfully")
 	defer conn.Close()
 
+	messageRepo := message.NewMessageRepository(conn)
+	messageHandler := handler.NewHandler(messageRepo)
+
+	r := router.NewRouter(messageHandler)
 	//redis
 
 	rdb := redis.NewClient(&redis.Options{
@@ -43,7 +50,7 @@ func main() {
 	})
 
 	log.Println("listening on :8080")
-	err = http.ListenAndServe(":8080", nil)
+	err = http.ListenAndServe(":8080", r)
 	if err != nil {
 		log.Fatal(err)
 	}
