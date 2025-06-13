@@ -43,13 +43,6 @@ func main() {
 	}
 	log.Println("connected to redis successfully")
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		_, err := w.Write([]byte("OK"))
-		if err != nil {
-			log.Fatalf("failed to write response: %v", err)
-		}
-	})
-
 	log.Println("listening on :8080")
 	err = http.ListenAndServe(":8080", r)
 	if err != nil {

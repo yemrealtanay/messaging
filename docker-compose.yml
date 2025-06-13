@@ -2,7 +2,9 @@ version: '3.9'
 
 services:
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "8080:8080"
     env_file:
@@ -11,6 +13,20 @@ services:
       - db
       - redis
     restart: always
+
+  app-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
 
   db:
     image: postgres:17

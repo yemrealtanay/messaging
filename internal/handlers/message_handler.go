@@ -17,7 +17,8 @@ func NewMessageHandler(repo *repositories.MessageRepository) *MessageHandler {
 func (h *MessageHandler) GetAllSentMessages(w http.ResponseWriter, r *http.Request) {
 	messages, err := h.Repo.GetSentMessages()
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		println("GetSentMessages error:", err.Error())
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
