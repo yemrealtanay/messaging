@@ -1,0 +1,36 @@
+package message
+
+import (
+	"database/sql"
+
+	"messaging/internal/model"
+	"messaging/internal/repository/base"
+)
+
+type Repository struct {
+	base.BaseSQLRepository[model.Message]
+}
+
+func NewMessageRepository(db *sql.DB) *Repository {
+	return &Repository{
+		base.BaseSQLRepository[model.Message]{
+			DB:        db,
+			TableName: "messages",
+			ScanFunc:  scanMessage,
+		},
+	}
+}
+
+func scanMessage(rows *sql.Rows) (model.Message, error) {
+	var msg model.Message
+	err := rows.Scan(
+		&msg.ID,
+		&msg.Content,
+		&msg.ToPhone,
+		&msg.IsSent,
+		&msg.CreatedAt,
+		&msg.MessageID,
+		&msg.SentAt,
+	)
+	return msg, err
+}

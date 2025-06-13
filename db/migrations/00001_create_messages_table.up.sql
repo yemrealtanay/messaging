@@ -4,5 +4,6 @@ CREATE TABLE IF NOT EXISTS messages (
     content TEXT NOT NULL,
     is_sent BOOLEAN DEFAULT FALSE,
     sent_at TIMESTAMP,
-    message_id UUID
+    message_id UUID,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
