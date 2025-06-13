@@ -14,4 +14,6 @@ up-dev:
 	docker compose run --rm migrate
 	docker compose up --build -d app-dev
 
-rebuild: down up-dev
+rebuild: down up
+
+rebuild-dev: down up-dev

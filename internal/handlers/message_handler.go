@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"encoding/json"
 	"messaging/internal/repositories"
+	"messaging/internal/response"
 	"net/http"
 )
 
@@ -17,10 +17,12 @@ func NewMessageHandler(repo *repositories.MessageRepository) *MessageHandler {
 func (h *MessageHandler) GetAllSentMessages(w http.ResponseWriter, r *http.Request) {
 	messages, err := h.Repo.GetSentMessages()
 	if err != nil {
-		http.Error(w, "internal server error", http.StatusInternalServerError)
-		println("GetSentMessages error:", err.Error())
+		response.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(messages)
+	if messages == nil {
+		response.JSON(w, http.StatusOK, "No Message Data", struct{}{})
+	} else {
+		response.JSON(w, http.StatusOK, "All Sent Messages retrieved successfully", messages)
+	}
 }
