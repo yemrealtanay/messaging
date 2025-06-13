@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"log"
-	handler "messaging/internal/handler/message"
-	"messaging/internal/repository/message"
+	"messaging/internal/handlers"
+	"messaging/internal/repositories"
 	"messaging/internal/router"
 	"net/http"
 	"os"
@@ -27,10 +27,11 @@ func main() {
 	log.Println("connected to postgres successfully")
 	defer conn.Close()
 
-	messageRepo := message.NewMessageRepository(conn)
-	messageHandler := handler.NewHandler(messageRepo)
-
-	r := router.NewRouter(messageHandler)
+	repo := repositories.NewMessageRepository(conn)
+	reg := &router.HandlerRegistry{
+		Message: handlers.NewMessageHandler(repo),
+	}
+	r := router.NewRouter(reg)
 	//redis
 
 	rdb := redis.NewClient(&redis.Options{

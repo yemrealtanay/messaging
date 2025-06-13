@@ -1,18 +1,18 @@
-package message
+package repositories
 
 import (
 	"database/sql"
 
 	"messaging/internal/model"
-	"messaging/internal/repository/base"
+	"messaging/internal/repositories/base"
 )
 
-type Repository struct {
+type MessageRepository struct {
 	base.BaseSQLRepository[model.Message]
 }
 
-func NewMessageRepository(db *sql.DB) *Repository {
-	return &Repository{
+func NewMessageRepository(db *sql.DB) *MessageRepository {
+	return &MessageRepository{
 		base.BaseSQLRepository[model.Message]{
 			DB:        db,
 			TableName: "messages",
@@ -21,7 +21,7 @@ func NewMessageRepository(db *sql.DB) *Repository {
 	}
 }
 
-func (r *Repository) GetSentMessages() ([]model.Message, error) {
+func (r *MessageRepository) GetSentMessages() ([]model.Message, error) {
 	rows, err := r.DB.Query("SELECT * FROM messages WHERE is_sent = true ORDER BY id DESC")
 	if err != nil {
 		return nil, err
