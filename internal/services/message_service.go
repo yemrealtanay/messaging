@@ -2,9 +2,11 @@ package services
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
+	"messaging/internal/logs"
 	"net/http"
 	"os"
 	"time"
@@ -14,11 +16,15 @@ import (
 )
 
 type MessageService struct {
-	Repo *repositories.MessageRepository
+	Repo   *repositories.MessageRepository
+	Logger *logs.RedisLogger
 }
 
-func NewMessageService(repo *repositories.MessageRepository) *MessageService {
-	return &MessageService{Repo: repo}
+func NewMessageService(repo *repositories.MessageRepository, l *logs.RedisLogger) *MessageService {
+	return &MessageService{
+		Repo:   repo,
+		Logger: l,
+	}
 }
 
 func (s *MessageService) SendUnsentMessages() error {
@@ -43,6 +49,11 @@ func (s *MessageService) sendMessage(msg model.Message) error {
 		return fmt.Errorf("WEBHOOK_URL env not set")
 	}
 
+	var respBody struct {
+		Message   string `json:"message"`
+		MessageID string `json:"messageId"`
+	}
+
 	payload := map[string]string{
 		"to":      msg.ToPhone,
 		"content": msg.Content,
@@ -63,11 +74,6 @@ func (s *MessageService) sendMessage(msg model.Message) error {
 		return fmt.Errorf("send message failed: %s", resp.Status)
 	}
 
-	var respBody struct {
-		Message   string `json:"message"`
-		MessageID string `json:"messageId"`
-	}
-
 	if err := json.NewDecoder(resp.Body).Decode(&respBody); err != nil {
 		return fmt.Errorf("failed to decode webhook response: %w", err)
 	}
@@ -76,6 +82,17 @@ func (s *MessageService) sendMessage(msg model.Message) error {
 
 	if err != nil {
 		return fmt.Errorf("failed to update message: %w", err)
+	}
+
+	logPayload := map[string]any{
+		"messageId": respBody.MessageID,
+		"to":        msg.ToPhone,
+		"content":   msg.Content,
+		"sent_at":   time.Now(),
+	}
+
+	if err := s.Logger.LogMessage(context.Background(), logPayload); err != nil {
+		log.Printf("failed to log message: %s", err)
 	}
 
 	log.Printf("sent message ID %d\n", msg.ID)

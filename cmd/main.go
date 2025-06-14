@@ -5,6 +5,7 @@ import (
 	"github.com/joho/godotenv"
 	"log"
 	"messaging/internal/handlers"
+	"messaging/internal/logs"
 	"messaging/internal/repositories"
 	"messaging/internal/router"
 	"messaging/internal/services"
@@ -31,17 +32,6 @@ func main() {
 	log.Println("connected to postgres successfully")
 	defer conn.Close()
 
-	repo := repositories.NewMessageRepository(conn)
-	service := services.NewMessageService(repo)
-	w := worker.NewWorker()
-	w.Start(service.SendUnsentMessages)
-
-	reg := &router.HandlerRegistry{
-		Message: handlers.NewMessageHandler(repo),
-		Worker:  handlers.NewWorkerHandler(w, service),
-	}
-	r := router.NewRouter(reg)
-
 	//redis
 
 	rdb := redis.NewClient(&redis.Options{
@@ -52,6 +42,18 @@ func main() {
 		log.Fatalf("failed to connect to redis: %v", err)
 	}
 	log.Println("connected to redis successfully")
+
+	logger := logs.NewRedisLogger(rdb, "message_logs")
+	repo := repositories.NewMessageRepository(conn)
+	service := services.NewMessageService(repo, logger)
+	w := worker.NewWorker()
+	w.Start(service.SendUnsentMessages)
+
+	reg := &router.HandlerRegistry{
+		Message: handlers.NewMessageHandler(repo),
+		Worker:  handlers.NewWorkerHandler(w, service),
+	}
+	r := router.NewRouter(reg)
 
 	log.Println("listening on :8080")
 	err = http.ListenAndServe(":8080", r)
