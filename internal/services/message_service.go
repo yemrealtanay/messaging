@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/google/uuid"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"messaging/internal/model"
@@ -38,13 +38,18 @@ func (s *MessageService) SendUnsentMessages() error {
 }
 
 func (s *MessageService) sendMessage(msg model.Message) error {
+	webhookURL := os.Getenv("WEBHOOK_URL")
+	if webhookURL == "" {
+		return fmt.Errorf("WEBHOOK_URL env not set")
+	}
+
 	payload := map[string]string{
 		"to":      msg.ToPhone,
 		"content": msg.Content,
 	}
 	body, _ := json.Marshal(payload)
 
-	req, _ := http.NewRequest(http.MethodPost, "https://webhook.site/b31e1d64-f0e9-4dd8-8505-69d29a5df172", bytes.NewBuffer(body))
+	req, _ := http.NewRequest(http.MethodPost, webhookURL, bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{Timeout: time.Second * 10}
@@ -58,7 +63,16 @@ func (s *MessageService) sendMessage(msg model.Message) error {
 		return fmt.Errorf("send message failed: %s", resp.Status)
 	}
 
-	err = s.Repo.MarkAsSent(msg.ID, time.Now(), uuid.New())
+	var respBody struct {
+		Message   string `json:"message"`
+		MessageID string `json:"messageId"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&respBody); err != nil {
+		return fmt.Errorf("failed to decode webhook response: %w", err)
+	}
+
+	err = s.Repo.MarkAsSent(msg.ID, time.Now(), respBody.MessageID)
 
 	if err != nil {
 		return fmt.Errorf("failed to update message: %w", err)

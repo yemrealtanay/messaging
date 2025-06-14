@@ -2,7 +2,6 @@ package repositories
 
 import (
 	"database/sql"
-	"github.com/google/uuid"
 	"time"
 
 	"messaging/internal/model"
@@ -66,7 +65,7 @@ func (r *MessageRepository) GetUnsentMessages(limit int) ([]model.Message, error
 	return messages, nil
 }
 
-func (r *MessageRepository) MarkAsSent(id int64, sentAt time.Time, messageID uuid.UUID) error {
+func (r *MessageRepository) MarkAsSent(id int64, sentAt time.Time, messageID string) error {
 	_, err := r.DB.Exec(`
 		UPDATE messages SET is_sent = true, sent_at = $1, message_id = $2 WHERE id = $3
 	`, sentAt, messageID, id)

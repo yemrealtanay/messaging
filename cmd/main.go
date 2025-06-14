@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/joho/godotenv"
 	"log"
 	"messaging/internal/handlers"
 	"messaging/internal/repositories"
@@ -18,6 +19,7 @@ import (
 )
 
 func main() {
+	_ = godotenv.Load()
 	ctx := context.Background()
 
 	conn, err := db.NewConnection()
@@ -49,7 +51,7 @@ func main() {
 
 	worker := worker.NewWorker()
 	worker.Start(service.SendUnsentMessages)
-	
+
 	log.Println("listening on :8080")
 	err = http.ListenAndServe(":8080", r)
 	if err != nil {
