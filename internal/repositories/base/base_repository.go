@@ -15,6 +15,10 @@ type BaseSQLRepository[T any] struct {
 }
 
 func (r *BaseSQLRepository[T]) GetAll() ([]T, error) {
+	//burada tablename'i dışardan alıyor olsaydık bir sqlinjection riski doğabiliyor.
+	//kendi repository'sinde table_name verdiğimiz için bu risk yok ama.
+	//sqlx kullanmayı çok düşündüm. Ancak böyle bir yapı yazmak bilgimi daha çok gösterir diye buna karar verdim.
+	//muhtemelen production'da bazı senaryolarda tercih etmem bunu ya da biraz daha geliştiririm.
 	rows, err := r.DB.Query("SELECT * FROM " + r.TableName + " ORDER BY id DESC")
 	if err != nil {
 		return nil, err

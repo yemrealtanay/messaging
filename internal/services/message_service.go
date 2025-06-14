@@ -17,14 +17,16 @@ import (
 )
 
 type MessageService struct {
-	Repo   *repositories.MessageRepository
-	Logger *logs.RedisLogger
+	Repo       *repositories.MessageRepository
+	Logger     *logs.RedisLogger
+	WebhookURL string
 }
 
-func NewMessageService(repo *repositories.MessageRepository, l *logs.RedisLogger) *MessageService {
+func NewMessageService(repo *repositories.MessageRepository, l *logs.RedisLogger, webhookURL string) *MessageService {
 	return &MessageService{
-		Repo:   repo,
-		Logger: l,
+		Repo:       repo,
+		Logger:     l,
+		WebhookURL: webHookUrl,
 	}
 }
 

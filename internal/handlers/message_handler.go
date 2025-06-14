@@ -20,7 +20,7 @@ func (h *MessageHandler) GetAllSentMessages(w http.ResponseWriter, r *http.Reque
 		response.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	if messages == nil {
+	if len(messages) == 0 {
 		response.JSON(w, http.StatusOK, "No Message Data", struct{}{})
 	} else {
 		response.JSON(w, http.StatusOK, "All Sent Messages retrieved successfully", messages)
