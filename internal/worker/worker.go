@@ -28,7 +28,7 @@ func (w *Worker) Start(task func() error) {
 		return
 	}
 
-	log.Println("🚀 Starting worker...")
+	log.Println("Starting worker...")
 
 	ctx, cancel := context.WithCancel(context.Background())
 	w.ctx = ctx

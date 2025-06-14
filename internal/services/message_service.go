@@ -5,12 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/cenkalti/backoff/v4"
 	"log"
-	"messaging/internal/logs"
 	"net/http"
 	"os"
 	"time"
 
+	"messaging/internal/logs"
 	"messaging/internal/model"
 	"messaging/internal/repositories"
 )
@@ -54,34 +55,52 @@ func (s *MessageService) sendMessage(msg model.Message) error {
 		MessageID string `json:"messageId"`
 	}
 
-	payload := map[string]string{
-		"to":      msg.ToPhone,
-		"content": msg.Content,
+	operation := func() error {
+		payload := map[string]string{
+			"to":      msg.ToPhone,
+			"content": msg.Content,
+		}
+		body, _ := json.Marshal(payload)
+
+		req, _ := http.NewRequest(http.MethodPost, webhookURL, bytes.NewBuffer(body))
+		req.Header.Set("Content-Type", "application/json")
+
+		client := &http.Client{Timeout: time.Second * 10}
+		resp, err := client.Do(req)
+		if err != nil {
+			return fmt.Errorf("send message failed: %w", err)
+		}
+
+		defer resp.Body.Close()
+
+		//burada bir backoff stratejisi göstermek istedim. Geçici http hatalarında tekrar denemek
+		//verinin işlendiğinden emin olmamızı sağlayabilir.
+		//test etmek için env'den webhook url değiştirebilirsiniz.
+		//Gönderim başarısız olursa mesaj 30 saniye boyunca exponential delay ile tekrar denenir.
+		//404 ve 400 gibi fatal hatalarda tekrar deneme yapılmaz.
+		if resp.StatusCode != http.StatusOK {
+			if resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusBadRequest {
+				return backoff.Permanent(fmt.Errorf("fatal status: %s", resp.Status))
+			}
+			return fmt.Errorf("retryable status: %s", resp.Status)
+		}
+
+		if err := json.NewDecoder(resp.Body).Decode(&respBody); err != nil {
+			return fmt.Errorf("failed to decode webhook response: %w", err)
+		}
+
+		return nil
 	}
-	body, _ := json.Marshal(payload)
 
-	req, _ := http.NewRequest(http.MethodPost, webhookURL, bytes.NewBuffer(body))
-	req.Header.Set("Content-Type", "application/json")
+	expBackOff := backoff.NewExponentialBackOff()
+	expBackOff.MaxElapsedTime = 30 * time.Second
 
-	client := &http.Client{Timeout: time.Second * 10}
-	resp, err := client.Do(req)
-	if err != nil {
-		return fmt.Errorf("send message failed: %w", err)
+	if err := backoff.Retry(operation, expBackOff); err != nil {
+		return fmt.Errorf("send message failed after retries: %w", err)
 	}
 
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("send message failed: %s", resp.Status)
-	}
-
-	if err := json.NewDecoder(resp.Body).Decode(&respBody); err != nil {
-		return fmt.Errorf("failed to decode webhook response: %w", err)
-	}
-
-	err = s.Repo.MarkAsSent(msg.ID, time.Now(), respBody.MessageID)
-
-	if err != nil {
-		return fmt.Errorf("failed to update message: %w", err)
+	if err := s.Repo.MarkAsSent(msg.ID, time.Now(), respBody.MessageID); err != nil {
+		return fmt.Errorf("mark message as sent failed after retries: %w", err)
 	}
 
 	logPayload := map[string]any{
