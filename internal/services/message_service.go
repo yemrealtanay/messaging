@@ -78,6 +78,6 @@ func (s *MessageService) sendMessage(msg model.Message) error {
 		return fmt.Errorf("failed to update message: %w", err)
 	}
 
-	log.Printf("✅ sent message ID %d\n", msg.ID)
+	log.Printf("sent message ID %d\n", msg.ID)
 	return nil
 }

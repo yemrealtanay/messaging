@@ -22,24 +22,33 @@ func NewWorker() *Worker {
 	}
 }
 
-func (w *Worker) Start(process func() error) {
+func (w *Worker) Start(task func() error) {
 	if w.running {
-		log.Println("worker is already running")
+		log.Println("Worker already running")
 		return
 	}
+
+	log.Println("🚀 Starting worker...")
+
+	ctx, cancel := context.WithCancel(context.Background())
+	w.ctx = ctx
+	w.cancel = cancel
+	w.ticker = time.NewTicker(30 * time.Second)
 	w.running = true
 
 	go func() {
-		log.Println("worker is running")
+		log.Println("Worker is running")
 		for {
 			select {
 			case <-w.ctx.Done():
-				log.Println("worker is shutting down")
+				log.Println("Worker is shutting down")
+				w.ticker.Stop()
+				w.running = false
 				return
 			case <-w.ticker.C:
 				log.Println("processing work")
-				if err := process(); err != nil {
-					log.Println("processing error:", err)
+				if err := task(); err != nil {
+					log.Printf("error processing: %v\n", err)
 				}
 			}
 		}
@@ -48,10 +57,14 @@ func (w *Worker) Start(process func() error) {
 
 func (w *Worker) Stop() {
 	if !w.running {
-		log.Println("worker is already stopped")
+		log.Println("Worker is not running")
 		return
 	}
-	w.ticker.Stop()
+
+	log.Println("Stopping worker...")
 	w.cancel()
-	w.running = false
+}
+
+func (w *Worker) IsRunning() bool {
+	return w.running
 }

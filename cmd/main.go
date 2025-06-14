@@ -32,10 +32,16 @@ func main() {
 	defer conn.Close()
 
 	repo := repositories.NewMessageRepository(conn)
+	service := services.NewMessageService(repo)
+	w := worker.NewWorker()
+	w.Start(service.SendUnsentMessages)
+
 	reg := &router.HandlerRegistry{
 		Message: handlers.NewMessageHandler(repo),
+		Worker:  handlers.NewWorkerHandler(w, service),
 	}
 	r := router.NewRouter(reg)
+
 	//redis
 
 	rdb := redis.NewClient(&redis.Options{
@@ -46,11 +52,6 @@ func main() {
 		log.Fatalf("failed to connect to redis: %v", err)
 	}
 	log.Println("connected to redis successfully")
-
-	service := services.NewMessageService(repo)
-
-	worker := worker.NewWorker()
-	worker.Start(service.SendUnsentMessages)
 
 	log.Println("listening on :8080")
 	err = http.ListenAndServe(":8080", r)
