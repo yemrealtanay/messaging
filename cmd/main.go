@@ -6,6 +6,8 @@ import (
 	"messaging/internal/handlers"
 	"messaging/internal/repositories"
 	"messaging/internal/router"
+	"messaging/internal/services"
+	"messaging/internal/worker"
 	"net/http"
 	"os"
 
@@ -43,6 +45,11 @@ func main() {
 	}
 	log.Println("connected to redis successfully")
 
+	service := services.NewMessageService(repo)
+
+	worker := worker.NewWorker()
+	worker.Start(service.SendUnsentMessages)
+	
 	log.Println("listening on :8080")
 	err = http.ListenAndServe(":8080", r)
 	if err != nil {
