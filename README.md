@@ -2,6 +2,8 @@
 
 This project demonstrates a simple but scalable architecture for managing message delivery using Go, PostgreSQL, Redis, and background workers.
 
+This application runs on localhost:8080. You can change the port via docker files. Make sure your pgsql and redis ports are empty.
+
 ---
 
 ## Getting Started
