@@ -51,8 +51,8 @@ The worker looks for unsent messages (`is_sent = false`), sends them to a webhoo
 | Method | Endpoint             | Description           |
 | ------ |----------------------| --------------------- |
 | GET    | `/messages`          | Returns sent messages |
-| POST   | `/auto_sender/start` | Starts the worker     |
-| POST   | `/auto_sender/stop`  | Stops the worker      |
+| POST   | `/start` | Starts the worker     |
+| POST   | `/stop`  | Stops the worker      |
 
 ---
 

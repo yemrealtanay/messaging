@@ -1,8 +1,8 @@
 package response
 
-//Burada benim response yapısında generic kullanmış olmam swagger'da sorun yarattı.
-//Bu yüzden bir workaround'la sorunu bu şekilde çözdüm.
-//task içeriğinde olmayan ek bir yapı için ekstra vakit harcamak istemedim.
+// Burada benim response yapısında generic kullanmış olmam swagger'da sorun yarattı.
+// Bu yüzden bir workaround'la sorunu bu şekilde çözdüm.
+// task içeriğinde olmayan ek bir yapı için ekstra vakit harcamak istemedim.
 type ExampleMessage struct {
 	ID        int64  `json:"id"`
 	Content   string `json:"content"`
