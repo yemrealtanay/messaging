@@ -14,6 +14,9 @@ up-dev:
 	docker compose run --rm migrate
 	docker compose up --build -d app-dev
 
+faker:
+	docker compose run --rm app-dev go run ./cmd/faker/main.go 5000
+
 rebuild: down up
 
 rebuild-dev: down up-dev
