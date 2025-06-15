@@ -33,7 +33,7 @@ func (w *Worker) Start(task func() error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	w.ctx = ctx
 	w.cancel = cancel
-	w.ticker = time.NewTicker(30 * time.Second)
+	w.ticker = time.NewTicker(120 * time.Second)
 	w.running = true
 
 	go func() {
