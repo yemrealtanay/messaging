@@ -2,6 +2,7 @@ package router
 
 import (
 	"github.com/gorilla/mux"
+	httpSwagger "github.com/swaggo/http-swagger"
 	"messaging/internal/handlers"
 )
 
@@ -18,8 +19,9 @@ func NewRouter(h *HandlerRegistry) *mux.Router {
 	r := mux.NewRouter()
 
 	r.HandleFunc("/messages", h.Message.GetAllSentMessages).Methods("GET")
-	r.HandleFunc("/auto-sender/start", h.Worker.Start).Methods("POST")
-	r.HandleFunc("/auto-sender/stop", h.Worker.Stop).Methods("POST")
+	r.HandleFunc("/start", h.Worker.Start).Methods("POST")
+	r.HandleFunc("/stop", h.Worker.Stop).Methods("POST")
+	r.PathPrefix("/docs/").Handler(httpSwagger.WrapHandler)
 
 	return r
 }

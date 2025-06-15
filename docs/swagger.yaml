@@ -1,0 +1,89 @@
+basePath: /
+definitions:
+  response.EmptyResponse:
+    properties:
+      data: {}
+      message:
+        type: string
+      status:
+        type: integer
+    type: object
+  response.ExampleMessage:
+    properties:
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      is_sent:
+        type: boolean
+      message_id:
+        type: string
+      sent_at:
+        type: string
+      to_phone:
+        type: string
+    type: object
+  response.MessageListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/response.ExampleMessage'
+        type: array
+      message:
+        type: string
+      status:
+        type: integer
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: This is a sample messaging system with background worker and retry
+  title: Messaging API
+  version: "1.0"
+paths:
+  /messages:
+    get:
+      description: Fetches messages where is_sent=true
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MessageListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.EmptyResponse'
+      summary: Returns all sent messages
+      tags:
+      - messages
+  /start:
+    post:
+      description: Triggers the background worker to begin processing unsent messages
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.EmptyResponse'
+      summary: Starts the background worker
+      tags:
+      - worker
+  /stop:
+    post:
+      description: Gracefully stops the background message processing worker
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.EmptyResponse'
+      summary: Stops the background worker
+      tags:
+      - worker
+swagger: "2.0"

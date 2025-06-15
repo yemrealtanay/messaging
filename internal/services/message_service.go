@@ -26,7 +26,7 @@ func NewMessageService(repo *repositories.MessageRepository, l *logs.RedisLogger
 	return &MessageService{
 		Repo:       repo,
 		Logger:     l,
-		WebhookURL: webHookUrl,
+		WebhookURL: webhookURL,
 	}
 }
 
